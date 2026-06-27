@@ -15,11 +15,15 @@ typedef EnvReader = String? Function(String key);
 class NetworkUtils {
   const NetworkUtils._();
 
-  static Dio createDio({bool enableLogging = kDebugMode}) {
+  static Dio createDio({
+    bool enableLogging = kDebugMode,
+    List<Interceptor> interceptors = const [],
+  }) {
     final dio = Dio()
       ..options.connectTimeout = AppConstants.timeout
       ..options.receiveTimeout = AppConstants.timeout
-      ..interceptors.add(NetworkInterceptor());
+      ..interceptors.add(NetworkInterceptor())
+      ..interceptors.addAll(interceptors);
 
     if (enableLogging) {
       dio.interceptors.add(

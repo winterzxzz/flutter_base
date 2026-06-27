@@ -20,6 +20,8 @@ class SecureStorageKeys {
   const SecureStorageKeys._();
 
   static const String hiveEncryptionKey = 'hive_encryption_key';
+  static const String accessToken = 'auth_access_token';
+  static const String refreshToken = 'auth_refresh_token';
 }
 
 abstract class HiveEncryptionKeyService {

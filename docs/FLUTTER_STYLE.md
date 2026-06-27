@@ -249,6 +249,31 @@ Rules:
 - Test pure logic with an injected `EnvReader` (`requiredEnv(..., envReader:)`),
   not a real `.env`.
 
+## Auth Token and Refresh
+
+`data_module/networks/auth/` adds bearer auth on top of `Dio`, kept
+product-neutral:
+
+- `AuthTokenStore` reads/writes the token pair; the default
+  `SecureStorageAuthTokenStore` keeps tokens in `SecureStorageService` under
+  `SecureStorageKeys.accessToken` / `refreshToken`.
+- `TokenRefresher` exchanges a refresh token for new tokens. The base ships
+  `UnsupportedTokenRefresher` (returns `null`); a product registers a real one
+  that calls its auth endpoint.
+- `AuthInterceptor` attaches `Authorization: Bearer <token>` and, on a 401,
+  refreshes once and retries the original request; if refresh fails it clears
+  the session and calls `onSessionExpired`.
+
+Rules:
+
+- Add `AuthInterceptor` to `Dio` via `NetworkUtils.createDio(interceptors: [...])`
+  in DI; it must run with its own retry client to avoid a refresh loop.
+- Skip auth on the login/refresh request with
+  `options.extra[AuthInterceptor.skipAuthKey] = true`.
+- Cubits/repositories never read tokens directly; go through `AuthTokenStore`.
+- Override `TokenRefresher` per product; do not hard-code auth endpoints in the
+  base.
+
 ## Network Errors
 
 `NetworkError` is the typed failure returned as `Left` from repositories.
@@ -404,3 +429,6 @@ Rules:
 - Before completion run `dart format lib test`, `flutter analyze`,
   `flutter test`, `! rg '\.sp\b' lib`, and
   `! rg 'Theme\.of\(context\)\.textTheme' lib`.
+- CI (`.github/workflows/ci.yml`) runs the same gate on every PR and push to
+  `master`: format check, analyze, test, and the `.sp` / direct-`textTheme`
+  guards. Keep it green.

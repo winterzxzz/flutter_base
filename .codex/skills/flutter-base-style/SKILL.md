@@ -215,8 +215,29 @@ Rules:
 - `NetworkError.fromDioError` maps `DioExceptionType` to a message and keeps
   `statusCode` + `type`; branch via `isUnauthorized`/`isTimeout`/
   `isConnectionError`, not by parsing `message`.
-- `NetworkInterceptor` only logs failures; add a separate auth/token-refresh
-  interceptor when a product needs it.
+- `NetworkInterceptor` only logs failures; auth/token refresh is a separate
+  interceptor (see below).
+
+## Auth Token and Refresh
+
+`data_module/networks/auth/` adds bearer auth, kept product-neutral:
+
+- `AuthTokenStore` (default `SecureStorageAuthTokenStore`) stores the token pair
+  in `SecureStorageService` under `SecureStorageKeys.accessToken`/`refreshToken`.
+- `TokenRefresher` swaps a refresh token for new tokens; base ships
+  `UnsupportedTokenRefresher`, products register a real one.
+- `AuthInterceptor` attaches `Authorization: Bearer <token>` and, on 401,
+  refreshes once and retries; on failure it clears the session and calls
+  `onSessionExpired`.
+
+Rules:
+
+- Add `AuthInterceptor` via `NetworkUtils.createDio(interceptors: [...])` in DI;
+  give it a retry client so refresh does not loop.
+- Skip auth on login/refresh with
+  `options.extra[AuthInterceptor.skipAuthKey] = true`.
+- Read tokens only through `AuthTokenStore`; never hard-code auth endpoints in
+  the base.
 
 ## Retrofit APIs
 

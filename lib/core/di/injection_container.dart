@@ -3,6 +3,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../data_module/api/example_api_client.dart';
+import '../../data_module/networks/auth/auth_interceptor.dart';
+import '../../data_module/networks/auth/auth_token_store.dart';
+import '../../data_module/networks/auth/token_refresher.dart';
 import '../../data_module/networks/network_utils.dart';
 import '../../data_module/repositories/example_repository.dart';
 import '../../data_module/services/local/hive_database_service.dart';
@@ -33,7 +36,9 @@ Future<void> configureDependencies({
   LocalDatabaseService? localDatabase,
 }) async {
   if (!sl.isRegistered<Dio>()) {
-    sl.registerLazySingleton<Dio>(NetworkUtils.createDio);
+    sl.registerLazySingleton<Dio>(
+      () => NetworkUtils.createDio(interceptors: [sl<AuthInterceptor>()]),
+    );
   }
 
   if (!sl.isRegistered<FlutterSecureStorage>()) {
@@ -56,6 +61,28 @@ Future<void> configureDependencies({
     sl.registerLazySingleton<HiveEncryptionKeyService>(
       () => SecureStorageHiveEncryptionKeyService(
         secureStorage: sl<SecureStorageService>(),
+      ),
+    );
+  }
+
+  if (!sl.isRegistered<AuthTokenStore>()) {
+    sl.registerLazySingleton<AuthTokenStore>(
+      () => SecureStorageAuthTokenStore(
+        secureStorage: sl<SecureStorageService>(),
+      ),
+    );
+  }
+
+  // Products override this with a real refresher that calls their auth API.
+  if (!sl.isRegistered<TokenRefresher>()) {
+    sl.registerLazySingleton<TokenRefresher>(UnsupportedTokenRefresher.new);
+  }
+
+  if (!sl.isRegistered<AuthInterceptor>()) {
+    sl.registerLazySingleton<AuthInterceptor>(
+      () => AuthInterceptor(
+        tokenStore: sl<AuthTokenStore>(),
+        refresher: sl<TokenRefresher>(),
       ),
     );
   }

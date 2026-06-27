@@ -42,6 +42,11 @@ Must-follow rules:
   `NetworkUtils.requiredEnv` from `.env` (loaded by dotenv in `main`), never
   hard-coded. Return `NetworkError.fromDioError` and branch on `isUnauthorized`/
   `isTimeout`, not on message strings.
+- Auth uses `AuthInterceptor` + `AuthTokenStore` (tokens in secure storage) with
+  401 refresh-and-retry; products override `TokenRefresher`. Never read tokens
+  or hard-code auth endpoints in Cubits/widgets.
+- Keep CI green (`.github/workflows/ci.yml`): format, analyze, test, and the
+  `.sp` / direct-`textTheme` guards run on every PR.
 - In widgets use `final textTheme = context.textTheme`; do not repeat
   `Theme.of(context).textTheme` inside widget trees.
 - Text sizes use `flutter_screenutil` `.r`, not `.sp`.
