@@ -10,6 +10,19 @@ of this base unless a story explicitly asks for it.
 Detailed rules live in `docs/FLUTTER_STYLE.md`. Project-scoped Codex skill
 lives in `.codex/skills/flutter-base-style/SKILL.md`. Keep this file short.
 
+### Source of truth (keep in sync)
+
+`docs/FLUTTER_STYLE.md` is the canonical style guide. The same rules are
+mirrored in two other places that different agents read:
+
+- `AGENTS.md` (this file) — short must-follow list; read by Claude Code (via
+  `CLAUDE.md`), OpenCode, and Antigravity.
+- `.codex/skills/flutter-base-style/SKILL.md` — Codex skill copy.
+
+When you change a style rule, edit `docs/FLUTTER_STYLE.md` first, then update
+the must-follow bullets here and the matching section in `SKILL.md` so all three
+stay consistent. Do not let them drift.
+
 Must-follow rules:
 
 - Widgets call Cubits; widgets do not call repositories directly.
