@@ -73,3 +73,5 @@ Flutter base pattern.
 - Repository rule update: `docs/FLUTTER_STYLE.md` records that widgets must call
   Cubits, Cubits call repositories, and repositories return
   `Either<NetworkError, T>` via `Left(error)` / `Right(data)`.
+- Repository example: added `ExampleApiClient`, `ExampleItem`, `NetworkError`,
+  `ExampleRepository`, and `ExampleCubit` with tests for success and failure.

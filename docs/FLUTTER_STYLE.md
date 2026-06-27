@@ -197,6 +197,16 @@ Rules:
 Repositories return `Either<NetworkError, T>` from `either_dart`, using
 `Left(error)` for failure and `Right(data)` for success.
 
+Reference implementation in this repo:
+
+- `lib/data_module/api/example_api_client.dart`
+- `lib/data_module/models/example_item.dart`
+- `lib/data_module/error/network_error.dart`
+- `lib/data_module/repositories/example_repository.dart`
+- `lib/presentation_module/ui/example/example_cubit.dart`
+- `test/data_module/repositories/example_repository_test.dart`
+- `test/presentation_module/ui/example/example_cubit_test.dart`
+
 ```dart
 abstract class AuthRepository {
   Future<Either<NetworkError, AuthResponse>> initAuth(AuthRequest request);
