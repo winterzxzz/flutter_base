@@ -1,6 +1,6 @@
 ---
 name: flutter-base-style
-description: "Use when editing this Flutter base project: data_module/presentation_module layering, WrapperLayoutView screens, flutter_bloc Cubit, get_it DI, context.textTheme text styling, flutter_screenutil .r text sizes, Retrofit APIs, json_annotation models, repositories with Either NetworkError result types, Hive local database, secure storage, and generated code."
+description: "Use when creating, editing, refactoring, or splitting any Flutter app code in this base project: data_module/presentation_module layering and folder structure, WrapperLayoutView screens, shared_view reusable widgets/layouts, feature sub-widget extraction when a page or build method grows too long, promoting widgets from a feature to shared_view, flutter_bloc Cubit flow and state, get_it DI registration, context.textTheme text styling, flutter_screenutil .r/.w/.h sizes, Retrofit API clients, json_annotation models/DTOs, repositories with Either NetworkError result types, Hive local database, secure storage, build_runner generated code, clean-code refactors, and the format/analyze/test validation steps."
 ---
 
 # Flutter Base Style
