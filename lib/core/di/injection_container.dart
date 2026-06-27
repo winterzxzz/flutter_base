@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../data_module/api/example_api_client.dart';
+import '../../data_module/networks/network_utils.dart';
 import '../../data_module/repositories/example_repository.dart';
 import '../../data_module/services/local/hive_database_service.dart';
 import '../../data_module/services/local/secure_storage_service.dart';
@@ -32,7 +33,7 @@ Future<void> configureDependencies({
   LocalDatabaseService? localDatabase,
 }) async {
   if (!sl.isRegistered<Dio>()) {
-    sl.registerLazySingleton<Dio>(Dio.new);
+    sl.registerLazySingleton<Dio>(NetworkUtils.createDio);
   }
 
   if (!sl.isRegistered<FlutterSecureStorage>()) {
@@ -71,7 +72,7 @@ Future<void> configureDependencies({
 
   if (!sl.isRegistered<ExampleApiClient>()) {
     sl.registerLazySingleton<ExampleApiClient>(
-      () => ExampleApiClient(sl<Dio>(), baseUrl: 'https://example.com'),
+      () => ExampleApiClient(sl<Dio>(), baseUrl: NetworkUtils.apiBaseUrl),
     );
   }
 

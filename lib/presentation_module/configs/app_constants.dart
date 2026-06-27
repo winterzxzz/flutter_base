@@ -7,4 +7,5 @@ class AppConstants {
   static const appSubtitle = 'Reusable Flutter starter';
   static const designSize = Size(390, 844);
   static const supportedLocales = [Locale('en'), Locale('vi')];
+  static const Duration timeout = Duration(seconds: 30);
 }

@@ -223,6 +223,51 @@ Rules:
 - Per-screen Cubits are usually factories.
 - Tests call `resetDependencies()` when touching global `sl`.
 
+## Networking and Env
+
+`data_module/networks/network_utils.dart` builds the shared `Dio` and reads
+environment config. Env values live in `.env` (loaded by `flutter_dotenv` in
+`main` before `configureDependencies`); `.env.example` documents the keys.
+
+```dart
+sl.registerLazySingleton<Dio>(NetworkUtils.createDio);
+
+sl.registerLazySingleton<ExampleApiClient>(
+  () => ExampleApiClient(sl<Dio>(), baseUrl: NetworkUtils.apiBaseUrl),
+);
+```
+
+Rules:
+
+- `NetworkUtils.createDio()` sets `AppConstants.timeout`, adds
+  `NetworkInterceptor` (error logging), and `PrettyDioLogger` in debug only.
+- Read base URLs/secrets via `NetworkUtils.requiredEnv('KEY')`; never hard-code
+  them in API clients, Cubits, or widgets. Add a getter per key.
+- Load `.env` once in `main` with `await dotenv.load(fileName: '.env')`.
+- `NetworkInterceptor` stays product-neutral: it logs failures only. Add a
+  separate auth/token-refresh interceptor when a product needs it.
+- Test pure logic with an injected `EnvReader` (`requiredEnv(..., envReader:)`),
+  not a real `.env`.
+
+## Network Errors
+
+`NetworkError` is the typed failure returned as `Left` from repositories.
+
+```dart
+on DioException catch (e) {
+  return Left(NetworkError.fromDioError(e));
+}
+```
+
+Rules:
+
+- `NetworkError.fromDioError` maps `DioExceptionType` to a friendly message and
+  keeps `statusCode` + `type`.
+- Branch on kind via getters (`isUnauthorized`, `isTimeout`,
+  `isConnectionError`) in Cubits — do not parse `message` strings.
+- Structured API errors are read from `data['errors'][0]['message']` or
+  `data['message']`; keep parsing inside `NetworkError`.
+
 ## Retrofit APIs
 
 API clients live in `data_module/api`.

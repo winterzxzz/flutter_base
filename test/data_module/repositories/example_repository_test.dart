@@ -24,10 +24,11 @@ void main() {
         apiClient: _FakeExampleApiClient(
           error: DioException(
             requestOptions: RequestOptions(path: '/examples'),
-            response: Response<void>(
+            type: DioExceptionType.badResponse,
+            response: Response<dynamic>(
               requestOptions: RequestOptions(path: '/examples'),
               statusCode: 500,
-              statusMessage: 'Server error',
+              data: const {'message': 'Server error'},
             ),
           ),
         ),

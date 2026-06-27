@@ -38,6 +38,10 @@ Must-follow rules:
   features reuse it; otherwise keep it in the feature's `widgets/` folder.
 - Store sensitive local data in encrypted Hive boxes using keys from
   `SecureStorageService`; plain Hive boxes are cache/preferences only.
+- Build `Dio` via `NetworkUtils.createDio`; read base URLs/secrets through
+  `NetworkUtils.requiredEnv` from `.env` (loaded by dotenv in `main`), never
+  hard-coded. Return `NetworkError.fromDioError` and branch on `isUnauthorized`/
+  `isTimeout`, not on message strings.
 - In widgets use `final textTheme = context.textTheme`; do not repeat
   `Theme.of(context).textTheme` inside widget trees.
 - Text sizes use `flutter_screenutil` `.r`, not `.sp`.

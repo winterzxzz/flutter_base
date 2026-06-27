@@ -191,6 +191,33 @@ Rules:
 - Per-screen Cubits are usually factories.
 - Tests call `resetDependencies()` when touching global `sl`.
 
+## Networking and Env
+
+Build the shared `Dio` and read env config through
+`data_module/networks/network_utils.dart`. Env values come from `.env`
+(loaded by `flutter_dotenv` in `main`); `.env.example` lists the keys.
+
+```dart
+sl.registerLazySingleton<Dio>(NetworkUtils.createDio);
+
+sl.registerLazySingleton<ExampleApiClient>(
+  () => ExampleApiClient(sl<Dio>(), baseUrl: NetworkUtils.apiBaseUrl),
+);
+```
+
+Rules:
+
+- `NetworkUtils.createDio()` sets `AppConstants.timeout`, adds
+  `NetworkInterceptor` (error logging) and `PrettyDioLogger` in debug only.
+- Read base URLs/secrets via `NetworkUtils.requiredEnv('KEY')`; never hard-code
+  them in API clients, Cubits, or widgets.
+- Load `.env` once in `main` with `await dotenv.load(fileName: '.env')`.
+- `NetworkError.fromDioError` maps `DioExceptionType` to a message and keeps
+  `statusCode` + `type`; branch via `isUnauthorized`/`isTimeout`/
+  `isConnectionError`, not by parsing `message`.
+- `NetworkInterceptor` only logs failures; add a separate auth/token-refresh
+  interceptor when a product needs it.
+
 ## Retrofit APIs
 
 API clients live in `data_module/api` and use typed DTOs:
