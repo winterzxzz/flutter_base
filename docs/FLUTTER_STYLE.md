@@ -87,6 +87,55 @@ New screen rules:
 Keep the base layout product-neutral. Do not add premium, ads, SVG asset, or
 feature-specific dependencies to `WrapperLayoutView`.
 
+## Shared View vs Feature Widgets
+
+Reusable UI is split by how many features use it.
+
+- `presentation_module/shared_view/`: widgets/layouts reused by **two or more**
+  features. Export them from `shared_view/shared_view.dart` and import that
+  barrel.
+- `presentation_module/ui/<feature>/widgets/`: sub-widgets used by **only that
+  feature**. Export them from the feature barrel `<feature>.dart`.
+
+Rules:
+
+- Put a widget in `shared_view/` only when a second feature/screen needs it.
+  A one-off widget stays in its feature's `widgets/` folder; promote it later
+  when a second caller appears.
+- `shared_view/` widgets are product-neutral and presentational: data and
+  callbacks via the constructor, no feature Cubit, repository, service, or
+  `get_it` access.
+
+## Feature Sub-Widgets
+
+When a feature page grows too long, split it into sub-widgets local to that
+feature instead of into `shared_view/`.
+
+```text
+lib/presentation_module/ui/example/
+  example.dart            barrel: exports page + cubit + widgets
+  example_page.dart       thin: layout + composition only
+  example_cubit.dart
+  example_state.dart
+  widgets/                sub-widgets used only by this feature
+    example_header.dart
+    example_list_item.dart
+```
+
+Rules:
+
+- Keep `<feature>_page.dart` thin: compose the screen and wire the Cubit; it
+  does not hold large widget trees.
+- When `build` gets long, extract a chunk into `widgets/` under the same
+  feature folder.
+- Name sub-widgets with the feature prefix (`ExampleHeader`, `ExampleListItem`).
+- Export feature sub-widgets from the feature barrel `<feature>.dart`.
+- Prefer extracting sub-widget classes over private `Widget _buildX()` helper
+  methods.
+- Sub-widgets stay presentational: data/callbacks via the constructor; reach the
+  Cubit via `context.read`/`BlocBuilder`, never a repository, service, or
+  `get_it` directly.
+
 ## Cubit Flow
 
 Widgets do not call repositories directly. Widgets call Cubits; Cubits call
