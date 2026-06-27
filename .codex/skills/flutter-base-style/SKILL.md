@@ -68,6 +68,63 @@ Rules:
 - Widgets inside `body` still follow: Widget -> Cubit -> Repository ->
   ApiClient/Service.
 
+## Shared View
+
+`lib/presentation_module/shared_view/` holds widgets and layouts that are reused
+across multiple features. Only put a widget here when more than one place uses
+it.
+
+Rules:
+
+- Write a widget into `shared_view/` only when it is reused in two or more
+  features/screens. A widget used by a single feature stays in that feature's
+  `widgets/` folder.
+- Do not pre-emptively move a one-off widget to `shared_view/`; promote it later
+  when a second caller appears.
+- Keep `shared_view/` widgets product-neutral and presentational: data and
+  callbacks via the constructor, no feature Cubit, repository, service, or
+  `get_it` access.
+- Export shared widgets from the `shared_view/shared_view.dart` barrel and
+  import that barrel.
+
+## Feature Sub-Widgets
+
+Each feature lives in `lib/presentation_module/ui/<feature>/` with a barrel
+`<feature>.dart`, a `<feature>_page.dart`, a `<feature>_cubit.dart`, and its
+state. When a feature page grows too long, split it into sub-widgets that are
+local to that feature, not into `shared_view/`.
+
+Layout:
+
+```text
+lib/presentation_module/ui/example/
+  example.dart            // barrel, exports page + cubit + widgets
+  example_page.dart       // thin: layout + composition only
+  example_cubit.dart
+  example_state.dart
+  widgets/                // sub-widgets used only by this feature
+    example_header.dart
+    example_list_item.dart
+```
+
+Rules:
+
+- Keep `<feature>_page.dart` thin: it composes the screen and wires the Cubit;
+  it does not hold large widget trees.
+- When `build` gets long or a chunk of UI is reusable only inside this feature,
+  extract it into `widgets/` under the same feature folder.
+- Name sub-widgets with the feature prefix (`ExampleHeader`,
+  `ExampleListItem`) so ownership is obvious.
+- Export feature sub-widgets from the feature barrel `<feature>.dart`, and
+  import the barrel within the feature.
+- Promote a widget to `shared_view/` only when a second feature needs it; until
+  then it stays feature-local.
+- Sub-widgets stay presentational: they take data and callbacks via the
+  constructor; they call the Cubit via `context.read`/`BlocBuilder`, never a
+  repository, service, or `get_it` directly.
+- Prefer extracting sub-widget classes over private `Widget _buildX()` helper
+  methods.
+
 ## Text Style
 
 Always use the context extension in widgets:
