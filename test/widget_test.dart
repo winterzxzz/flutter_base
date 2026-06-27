@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_base/core/di/injection_container.dart';
+import 'package:flutter_base/data_module/services/local/hive_database_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 
 import 'package:flutter_base/main.dart';
 
 void main() {
   setUp(() async {
     await resetDependencies();
-    await configureDependencies();
+    await configureDependencies(localDatabase: _FakeLocalDatabaseService());
   });
 
   tearDown(resetDependencies);
@@ -53,4 +55,25 @@ void main() {
     expect(subtitle.style?.fontSize, 16.r);
     expect(count.style?.fontSize, 64.r);
   });
+}
+
+class _FakeLocalDatabaseService implements LocalDatabaseService {
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<Box<E>> openBox<E>(String name) {
+    throw UnimplementedError('Widget tests do not use local database.');
+  }
+
+  @override
+  Future<Box<E>> openEncryptedBox<E>(String name) {
+    throw UnimplementedError('Widget tests do not use local database.');
+  }
+
+  @override
+  Future<void> deleteBox(String name) async {}
+
+  @override
+  Future<void> close() async {}
 }

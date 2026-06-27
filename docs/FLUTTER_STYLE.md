@@ -285,6 +285,23 @@ Rules:
 - Network, provider, and parse failures become typed errors, not thrown UI
   exceptions.
 
+## Local Storage
+
+Use Hive for local database storage and `flutter_secure_storage` for secrets.
+
+Rules:
+
+- Plain Hive boxes are for non-sensitive cache and app preferences only.
+- Sensitive data uses `LocalDatabaseService.openEncryptedBox`, never a plain
+  Hive box.
+- Hive encryption keys are generated with Hive and stored in
+  `SecureStorageService`, backed by platform secure storage.
+- Keep storage access in services/repositories; widgets must call Cubits, not
+  Hive or secure storage directly.
+- Register storage services in `core/di/injection_container.dart` and inject
+  them through repositories or Cubits.
+- Use stable box/key names from `HiveBoxNames` and `SecureStorageKeys`.
+
 ## Validation
 
 - Add failing tests before production code.

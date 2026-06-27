@@ -1,17 +1,72 @@
-import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../data_module/api/example_api_client.dart';
 import '../../data_module/repositories/example_repository.dart';
+import '../../data_module/services/local/hive_database_service.dart';
+import '../../data_module/services/local/secure_storage_service.dart';
 import '../../presentation_module/blocs/app/app_config_cubit.dart';
 import '../../presentation_module/ui/example/example_cubit.dart';
 import '../../presentation_module/ui/home/home_cubit.dart';
 
 final sl = GetIt.instance;
 
-Future<void> configureDependencies() async {
+/// Builds a [FlutterSecureStorage] hardened for storing sensitive data.
+///
+/// - Android: relies on the v10 default ciphers (RSA-OAEP key wrapping +
+///   AES-GCM storage). Requires `minSdk >= 23` (set in app/build.gradle.kts).
+/// - iOS/macOS Keychain: items are readable only after the first device
+///   unlock following boot, and are never migrated to a new device via
+///   encrypted backups (`first_unlock_this_device`).
+FlutterSecureStorage _buildSecureStorage() {
+  const keychainAccessibility = KeychainAccessibility.first_unlock_this_device;
+  return const FlutterSecureStorage(
+    aOptions: AndroidOptions(),
+    iOptions: IOSOptions(accessibility: keychainAccessibility),
+    mOptions: MacOsOptions(accessibility: keychainAccessibility),
+  );
+}
+
+Future<void> configureDependencies({
+  LocalDatabaseService? localDatabase,
+}) async {
   if (!sl.isRegistered<Dio>()) {
     sl.registerLazySingleton<Dio>(Dio.new);
+  }
+
+  if (!sl.isRegistered<FlutterSecureStorage>()) {
+    sl.registerLazySingleton<FlutterSecureStorage>(_buildSecureStorage);
+  }
+
+  if (!sl.isRegistered<KeyValueSecureStorage>()) {
+    sl.registerLazySingleton<KeyValueSecureStorage>(
+      () => FlutterKeyValueSecureStorage(storage: sl<FlutterSecureStorage>()),
+    );
+  }
+
+  if (!sl.isRegistered<SecureStorageService>()) {
+    sl.registerLazySingleton<SecureStorageService>(
+      () => SecureStorageService(storage: sl<KeyValueSecureStorage>()),
+    );
+  }
+
+  if (!sl.isRegistered<HiveEncryptionKeyService>()) {
+    sl.registerLazySingleton<HiveEncryptionKeyService>(
+      () => SecureStorageHiveEncryptionKeyService(
+        secureStorage: sl<SecureStorageService>(),
+      ),
+    );
+  }
+
+  if (!sl.isRegistered<LocalDatabaseService>()) {
+    final database =
+        localDatabase ??
+        HiveLocalDatabaseService(
+          encryptionKeyService: sl<HiveEncryptionKeyService>(),
+        );
+    await database.init();
+    sl.registerSingleton<LocalDatabaseService>(database);
   }
 
   if (!sl.isRegistered<ExampleApiClient>()) {
@@ -42,5 +97,8 @@ Future<void> configureDependencies() async {
 }
 
 Future<void> resetDependencies() async {
+  if (sl.isRegistered<LocalDatabaseService>()) {
+    await sl<LocalDatabaseService>().close();
+  }
   await sl.reset();
 }

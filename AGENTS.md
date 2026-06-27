@@ -18,6 +18,8 @@ Must-follow rules:
   `Right(data)`.
 - New standard screens use `WrapperLayoutView` for shared Scaffold/AppBar
   chrome; details live in `docs/FLUTTER_STYLE.md`.
+- Store sensitive local data in encrypted Hive boxes using keys from
+  `SecureStorageService`; plain Hive boxes are cache/preferences only.
 - In widgets use `final textTheme = context.textTheme`; do not repeat
   `Theme.of(context).textTheme` inside widget trees.
 - Text sizes use `flutter_screenutil` `.r`, not `.sp`.

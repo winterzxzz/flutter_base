@@ -78,3 +78,6 @@ Flutter base pattern.
 - Wrapper layout: added product-neutral `WrapperLayoutView` with configurable
   title, leading buttons, actions, background/gradient, bottom slots, and body
   padding.
+- Local storage: added Hive database service plus secure storage wrapper;
+  sensitive data uses encrypted Hive boxes with encryption keys kept in secure
+  storage.
