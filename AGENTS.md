@@ -15,6 +15,8 @@ Must-follow rules:
 - Cubits call repositories; repositories call API clients/services.
 - Repositories return `Either<NetworkError, T>` using `Left(error)` and
   `Right(data)`.
+- New standard screens use `WrapperLayoutView` for shared Scaffold/AppBar
+  chrome; details live in `docs/FLUTTER_STYLE.md`.
 - In widgets use `final textTheme = context.textTheme`; do not repeat
   `Theme.of(context).textTheme` inside widget trees.
 - Text sizes use `flutter_screenutil` `.r`, not `.sp`.

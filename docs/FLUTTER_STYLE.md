@@ -44,6 +44,49 @@ Rules:
 - Text sizes use `flutter_screenutil` `.r`, not `.sp`.
 - Spacing uses `.w`, `.h`, or `.r` by axis/intent.
 
+## Wrapper Layout
+
+Use `WrapperLayoutView` for common page chrome instead of rebuilding Scaffold
+and AppBar behavior in every screen.
+
+```dart
+return WrapperLayoutView(
+  args: WrapperLayoutArgs(
+    title: 'Search',
+    showBack: true,
+    onBack: () => Navigator.maybePop(context),
+    backgroundColor: const Color(0xFFF5F5F5),
+    bodyPadding: EdgeInsets.all(20.r),
+    actions: [IconButton(onPressed: onRefresh, icon: const Icon(Icons.refresh))],
+    body: const SearchView(),
+  ),
+);
+```
+
+Customization points:
+
+- `title` or `customTitle`
+- `showBack`, `showClose`, `leading`, `backIcon`, `closeIcon`
+- `actions`, `bottom`, `bottomNavigationBar`
+- `backgroundColor`, `appBarBackgroundColor`, gradient fields
+- `bodyPadding`, `extendBodyBehindAppBar`, `resizeToAvoidBottomInset`
+- `isHideAppBar` for full-screen pages
+
+New screen rules:
+
+- Start with `WrapperLayoutView(args: WrapperLayoutArgs(...))` for normal pages.
+- Put feature UI in the `body`; keep state reads in the feature view/widgets.
+- Use `BlocProvider(create: (_) => sl<FeatureCubit>())` outside the view when
+  the screen needs state.
+- Use `actions`, `bottom`, or `bottomNavigationBar` for page chrome instead of
+  nested Scaffolds.
+- Use `bodyPadding: EdgeInsets... .r` for responsive padding.
+- Use `isHideAppBar: true` only for full-screen experiences.
+- Do not call repositories from the wrapper body widget; call Cubit methods.
+
+Keep the base layout product-neutral. Do not add premium, ads, SVG asset, or
+feature-specific dependencies to `WrapperLayoutView`.
+
 ## Cubit Flow
 
 Widgets do not call repositories directly. Widgets call Cubits; Cubits call

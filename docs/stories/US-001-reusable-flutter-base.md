@@ -75,3 +75,6 @@ Flutter base pattern.
   `Either<NetworkError, T>` via `Left(error)` / `Right(data)`.
 - Repository example: added `ExampleApiClient`, `ExampleItem`, `NetworkError`,
   `ExampleRepository`, and `ExampleCubit` with tests for success and failure.
+- Wrapper layout: added product-neutral `WrapperLayoutView` with configurable
+  title, leading buttons, actions, background/gradient, bottom slots, and body
+  padding.
