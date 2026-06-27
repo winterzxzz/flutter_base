@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flutter Base Style"
+  short_description: "Project Flutter wrapper, Cubit, DI, API rules"
+  default_prompt: "Use $flutter-base-style from this repository before editing Flutter code."

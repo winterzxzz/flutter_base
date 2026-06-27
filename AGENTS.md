@@ -7,7 +7,8 @@ This project follows the style from
 reusable base app. Keep product-specific plant, ads, Firebase, and IAP code out
 of this base unless a story explicitly asks for it.
 
-Detailed rules live in `docs/FLUTTER_STYLE.md`. Keep this file short.
+Detailed rules live in `docs/FLUTTER_STYLE.md`. Project-scoped Codex skill
+lives in `.codex/skills/flutter-base-style/SKILL.md`. Keep this file short.
 
 Must-follow rules:
 
