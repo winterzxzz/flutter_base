@@ -43,9 +43,14 @@ Current Flutter folder shape:
 ```text
 lib/
   core/di/                         dependency registration
+  data_module/api/                 Retrofit API clients and interceptors
+  data_module/error/               typed failures
   data_module/models/              reusable data/status models
+  data_module/networks/            Dio, public env config, auth refresh
+  data_module/repositories/        repository contracts and implementations
+  data_module/services/            local/provider service wrappers
   presentation_module/app.dart     MaterialApp shell
-  presentation_module/blocs/       app-wide Cubits/BLoCs
+  presentation_module/blocs/       truly app-wide Cubits/BLoCs
   presentation_module/configs/     constants and routing
   presentation_module/extensions/  BuildContext theme/text helpers
   presentation_module/shared_view/ reusable widgets
@@ -56,6 +61,10 @@ lib/
 Widget code should import `presentation_module/extensions/extensions.dart`, then
 declare `final textTheme = context.textTheme` before building `Text` widgets.
 Text sizes use `flutter_screenutil` `.r`, not `.sp`.
+
+Feature/screen Cubits are scoped at the route or page boundary. The app
+bootstrapper should provide only state that is truly global, such as theme,
+locale, auth session, or connectivity.
 
 Detailed Flutter code style rules live in `docs/FLUTTER_STYLE.md`. Keep
 `AGENTS.md` short and use the style guide for examples.

@@ -191,6 +191,11 @@ return BlocProvider(
 - Use `context.read<Cubit>()` for commands.
 - Use `BlocBuilder<Cubit, State>` for rendering state.
 - Do not pass repositories into widgets.
+- Keep app-wide Cubits in the app bootstrapper only when the state is truly
+  global, such as theme, locale, auth session, or connectivity.
+- Provide feature/screen Cubits at the route or page boundary with
+  `BlocProvider(create: (_) => sl<FeatureCubit>())`; do not add every feature
+  Cubit to the app root.
 
 ## get_it
 
@@ -222,12 +227,29 @@ Rules:
 - App-wide Cubits can be singleton/lazy singleton with `dispose` closing.
 - Per-screen Cubits are usually factories.
 - Tests call `resetDependencies()` when touching global `sl`.
+- Routers may read `sl<FeatureCubit>()` to create route-scoped providers; widgets
+  should still receive dependencies through Cubit/state instead of calling
+  `get_it` directly.
+
+## Routing
+
+Use `presentation_module/configs/navigation/app_router.dart` for base routes.
+
+Rules:
+
+- Keep route names in `AppRoutes`.
+- Route builders provide screen Cubits with `BlocProvider` when needed.
+- Unknown routes must render a product-neutral not-found page; do not silently
+  fall back to home because bad deep links and typos become hard to diagnose.
+- Keep routing product-neutral in the base; product-specific deep links and
+  guards belong in product stories.
 
 ## Networking and Env
 
 `data_module/networks/network_utils.dart` builds the shared `Dio` and reads
-environment config. Env values live in `.env` (loaded by `flutter_dotenv` in
-`main` before `configureDependencies`); `.env.example` documents the keys.
+client-visible environment config. Prefer `--dart-define` for app builds.
+Products may add their own optional `.env` asset, but this base does not track
+or bundle `.env`. `.env.example` documents public keys only.
 
 ```dart
 sl.registerLazySingleton<Dio>(NetworkUtils.createDio);
@@ -240,11 +262,18 @@ sl.registerLazySingleton<ExampleApiClient>(
 Rules:
 
 - `NetworkUtils.createDio()` sets `AppConstants.timeout`, adds
-  `NetworkInterceptor` (error logging), and `PrettyDioLogger` in debug only.
-- Read base URLs/secrets via `NetworkUtils.requiredEnv('KEY')`; never hard-code
+  `NetworkInterceptor` (debug-only redacted error logging), and
+  `PrettyDioLogger` in debug only with headers/bodies disabled by default.
+- Read public base URLs via `NetworkUtils.requiredEnv('KEY')`; never hard-code
   them in API clients, Cubits, or widgets. Add a getter per key.
-- Load `.env` once in `main` with `await dotenv.load(fileName: '.env')`.
-- `NetworkInterceptor` stays product-neutral: it logs failures only. Add a
+- Never put secrets in Flutter `.env`, `--dart-define`, assets, or checked-in
+  files. Client config is inspectable after shipping. Use backend-controlled
+  secrets or runtime tokens stored through `SecureStorageService`.
+- Load optional `.env` once in `main` with
+  `await dotenv.load(fileName: '.env', isOptional: true)`.
+- `.env` stays ignored; track `.env.example` only.
+- `NetworkInterceptor` stays product-neutral: it logs failures only, never
+  refreshes tokens, and redacts token/password/secret-like fields. Add a
   separate auth/token-refresh interceptor when a product needs it.
 - Test pure logic with an injected `EnvReader` (`requiredEnv(..., envReader:)`),
   not a real `.env`.
@@ -429,6 +458,8 @@ Rules:
 - Before completion run `dart format lib test`, `flutter analyze`,
   `flutter test`, `! rg '\.sp\b' lib`, and
   `! rg 'Theme\.of\(context\)\.textTheme' lib`.
+- Before completion verify `.env` is not tracked with
+  `test -z "$(git ls-files -- .env)"`.
 - CI (`.github/workflows/ci.yml`) runs the same gate on every PR and push to
-  `master`: format check, analyze, test, and the `.sp` / direct-`textTheme`
-  guards. Keep it green.
+  `master`: tracked-env guard, format check, analyze, test, and the `.sp` /
+  direct-`textTheme` guards. Keep it green.

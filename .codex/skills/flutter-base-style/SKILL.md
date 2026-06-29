@@ -1,6 +1,6 @@
 ---
 name: flutter-base-style
-description: "Use when creating, editing, refactoring, or splitting any Flutter app code in this base project: data_module/presentation_module layering and folder structure, WrapperLayoutView screens, shared_view reusable widgets/layouts, feature sub-widget extraction when a page or build method grows too long, promoting widgets from a feature to shared_view, flutter_bloc Cubit flow and state, get_it DI registration, context.textTheme text styling, flutter_screenutil .r/.w/.h sizes, Retrofit API clients, json_annotation models/DTOs, repositories with Either NetworkError result types, Hive local database, secure storage, build_runner generated code, clean-code refactors, and the format/analyze/test validation steps."
+description: "Use when creating, editing, refactoring, or splitting any Flutter app code in this base project: data_module/presentation_module layering and folder structure, WrapperLayoutView screens, route-scoped feature Cubits, app-wide Cubit boundaries, shared_view reusable widgets/layouts, feature sub-widget extraction when a page or build method grows too long, flutter_bloc Cubit flow and state, get_it DI registration, app_router route/not-found behavior, context.textTheme text styling, flutter_screenutil .r/.w/.h sizes, Retrofit API clients, json_annotation models/DTOs, repositories with Either NetworkError result types, NetworkUtils public env/dart-define handling, redacted debug-only network logging, Hive local database, secure storage, build_runner generated code, clean-code refactors, and the format/analyze/test validation steps."
 ---
 
 # Flutter Base Style
@@ -165,6 +165,11 @@ Cubit rules:
 - Use `LoadStatus` for initial/loading/success/error.
 - Close timers/subscriptions in Cubit `close` or widget `dispose`.
 - Use `context.read<Cubit>()` for commands and `BlocBuilder` for rendering.
+- Keep app-wide Cubits in the app bootstrapper only when the state is truly
+  global, such as theme, locale, auth session, or connectivity.
+- Provide feature/screen Cubits at the route or page boundary with
+  `BlocProvider(create: (_) => sl<FeatureCubit>())`; do not add every feature
+  Cubit to the app root.
 
 ## get_it
 
@@ -190,12 +195,29 @@ Rules:
 - App-wide Cubits can be singleton/lazy singleton with dispose callbacks.
 - Per-screen Cubits are usually factories.
 - Tests call `resetDependencies()` when touching global `sl`.
+- Routers may read `sl<FeatureCubit>()` to create route-scoped providers; widgets
+  should still receive dependencies through Cubit/state instead of calling
+  `get_it` directly.
+
+## Routing
+
+Use `presentation_module/configs/navigation/app_router.dart` for base routes.
+
+Rules:
+
+- Keep route names in `AppRoutes`.
+- Route builders provide screen Cubits with `BlocProvider` when needed.
+- Unknown routes must render a product-neutral not-found page; do not silently
+  fall back to home because bad deep links and typos become hard to diagnose.
+- Keep routing product-neutral in the base; product-specific deep links and
+  guards belong in product stories.
 
 ## Networking and Env
 
-Build the shared `Dio` and read env config through
-`data_module/networks/network_utils.dart`. Env values come from `.env`
-(loaded by `flutter_dotenv` in `main`); `.env.example` lists the keys.
+Build the shared `Dio` and read client-visible env config through
+`data_module/networks/network_utils.dart`. Prefer `--dart-define` for app
+builds. Products may add their own optional `.env` asset, but this base does
+not track or bundle `.env`. `.env.example` lists public keys only.
 
 ```dart
 sl.registerLazySingleton<Dio>(NetworkUtils.createDio);
@@ -208,15 +230,22 @@ sl.registerLazySingleton<ExampleApiClient>(
 Rules:
 
 - `NetworkUtils.createDio()` sets `AppConstants.timeout`, adds
-  `NetworkInterceptor` (error logging) and `PrettyDioLogger` in debug only.
-- Read base URLs/secrets via `NetworkUtils.requiredEnv('KEY')`; never hard-code
+  `NetworkInterceptor` (debug-only redacted error logging) and
+  `PrettyDioLogger` in debug only with headers/bodies disabled by default.
+- Read public base URLs via `NetworkUtils.requiredEnv('KEY')`; never hard-code
   them in API clients, Cubits, or widgets.
-- Load `.env` once in `main` with `await dotenv.load(fileName: '.env')`.
+- Never put secrets in Flutter `.env`, `--dart-define`, assets, or checked-in
+  files. Client config is inspectable after shipping. Use backend-controlled
+  secrets or runtime tokens stored through `SecureStorageService`.
+- Load optional `.env` once in `main` with
+  `await dotenv.load(fileName: '.env', isOptional: true)`.
+- `.env` stays ignored; track `.env.example` only.
 - `NetworkError.fromDioError` maps `DioExceptionType` to a message and keeps
   `statusCode` + `type`; branch via `isUnauthorized`/`isTimeout`/
   `isConnectionError`, not by parsing `message`.
-- `NetworkInterceptor` only logs failures; auth/token refresh is a separate
-  interceptor (see below).
+- `NetworkInterceptor` only logs failures, never refreshes tokens, and redacts
+  token/password/secret-like fields; auth/token refresh is a separate
+  interceptor.
 
 ## Auth Token and Refresh
 
@@ -324,3 +353,5 @@ Rules:
 - Before completion run `dart format lib test`, `flutter analyze`,
   `flutter test`, `! rg '\.sp\b' lib`, and
   `! rg 'Theme\.of\(context\)\.textTheme' lib`.
+- Before completion verify `.env` is not tracked with
+  `test -z "$(git ls-files -- .env)"`.

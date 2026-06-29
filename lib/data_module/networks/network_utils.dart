@@ -8,10 +8,10 @@ import '../api/api_interceptors.dart';
 
 typedef EnvReader = String? Function(String key);
 
-/// Builds the shared [Dio] and reads environment config.
+/// Builds the shared [Dio] and reads public client environment config.
 ///
-/// Env values come from `.env` (loaded via `dotenv.load` in `main`). Keep base
-/// URLs and secrets here, never hard-coded in API clients, Cubits, or widgets.
+/// Prefer `--dart-define` for app builds. Products may optionally add their own
+/// `.env` asset, but Flutter client config is never secret once shipped.
 class NetworkUtils {
   const NetworkUtils._();
 
@@ -22,15 +22,17 @@ class NetworkUtils {
     final dio = Dio()
       ..options.connectTimeout = AppConstants.timeout
       ..options.receiveTimeout = AppConstants.timeout
-      ..interceptors.add(NetworkInterceptor())
+      ..interceptors.add(NetworkInterceptor(enabled: enableLogging))
       ..interceptors.addAll(interceptors);
 
     if (enableLogging) {
       dio.interceptors.add(
         PrettyDioLogger(
-          requestHeader: true,
-          requestBody: true,
-          responseBody: true,
+          enabled: enableLogging,
+          requestHeader: false,
+          requestBody: false,
+          responseHeader: false,
+          responseBody: false,
           compact: false,
         ),
       );
@@ -41,7 +43,7 @@ class NetworkUtils {
 
   /// Reads a required env var, throwing if it is missing or blank.
   static String requiredEnv(String key, {EnvReader? envReader}) {
-    final value = (envReader ?? dotenv.maybeGet)(key)?.trim();
+    final value = (envReader ?? _defaultEnvReader)(key)?.trim();
     if (value == null || value.isEmpty) {
       throw StateError('$key is not configured');
     }
@@ -49,4 +51,16 @@ class NetworkUtils {
   }
 
   static String get apiBaseUrl => requiredEnv('API_BASE_URL');
+
+  static String? _defaultEnvReader(String key) {
+    final dotenvValue = dotenv.isInitialized ? dotenv.maybeGet(key) : null;
+    if (dotenvValue != null && dotenvValue.trim().isNotEmpty) {
+      return dotenvValue;
+    }
+
+    return switch (key) {
+      'API_BASE_URL' => const String.fromEnvironment('API_BASE_URL'),
+      _ => null,
+    };
+  }
 }

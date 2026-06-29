@@ -7,13 +7,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/di/injection_container.dart';
 import 'presentation_module/app.dart';
 import 'presentation_module/blocs/app/app_config_cubit.dart';
-import 'presentation_module/ui/home/home_cubit.dart';
 
 Future<void> main() async {
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await dotenv.load(fileName: '.env');
+      await dotenv.load(fileName: '.env', isOptional: true);
       await configureDependencies();
       runApp(const AppBootstrapper());
     },
@@ -31,10 +30,7 @@ class AppBootstrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => sl<AppConfigCubit>()),
-        BlocProvider(create: (_) => sl<HomeCubit>()),
-      ],
+      providers: [BlocProvider(create: (_) => sl<AppConfigCubit>())],
       child: const BaseApp(),
     );
   }

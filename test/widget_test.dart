@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_base/core/di/injection_container.dart';
 import 'package:flutter_base/data_module/services/local/hive_database_service.dart';
+import 'package:flutter_base/presentation_module/shared_view/layout/wrapper_layout.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
@@ -15,11 +16,12 @@ void main() {
 
   tearDown(resetDependencies);
 
-  testWidgets('base app shell wires providers and home cubit', (
+  testWidgets('base app shell wires app provider and route-scoped home cubit', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const AppBootstrapper());
 
+    expect(find.byType(WrapperLayoutView), findsOneWidget);
     expect(find.text('Flutter Base'), findsOneWidget);
     expect(find.text('Reusable Flutter starter'), findsOneWidget);
     expect(find.text('0'), findsOneWidget);

@@ -129,6 +129,40 @@ void main() {
       expect(store.accessToken, 'fresh');
     });
 
+    test('retries with latest stored token before refreshing', () async {
+      final store = _FakeTokenStore(
+        accessToken: 'fresh',
+        refreshToken: 'refresh-1',
+      );
+      final refresher = _StubRefresher(
+        const AuthTokens(accessToken: 'unused', refreshToken: 'unused-refresh'),
+      );
+      final adapter = _FakeAdapter((options) {
+        final auth = options.headers['Authorization'];
+        return auth == 'Bearer fresh'
+            ? _json('{"ok":true}', 200)
+            : _json('{"message":"expired"}', 401);
+      });
+      final dio = Dio(BaseOptions(baseUrl: 'https://api.test'))
+        ..httpClientAdapter = adapter
+        ..interceptors.add(
+          AuthInterceptor(
+            tokenStore: store,
+            refresher: refresher,
+            retryClient: Dio()..httpClientAdapter = adapter,
+          ),
+        );
+
+      final response = await dio.get<dynamic>(
+        '/me',
+        options: Options(headers: {'Authorization': 'Bearer expired'}),
+      );
+
+      expect(response.statusCode, 200);
+      expect(refresher.calls, 0);
+      expect(store.accessToken, 'fresh');
+    });
+
     test('clears the session when refresh fails', () async {
       final store = _FakeTokenStore(
         accessToken: 'expired',

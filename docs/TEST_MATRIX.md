@@ -20,6 +20,7 @@ implemented until tests or validation evidence exist.
 | Story | Contract | Unit | Integration | E2E | Platform | Status | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | US-001 | Reusable Flutter starter structure and Cubit app shell | yes | yes | no | no | implemented | `flutter test test/presentation_module/blocs/app_config_cubit_test.dart test/presentation_module/ui/home/home_cubit_test.dart test/widget_test.dart` |
+| US-002 | Base hardening for env, logging, route scope, wrapper usage, not-found routing, docs, and skill rules | yes | yes | no | no | implemented | `dart format --set-exit-if-changed lib test`; `flutter analyze`; `flutter test`; `! rg '\.sp\b' lib`; `! rg 'Theme\.of\(context\)\.textTheme' lib`; `test -z "$(git ls-files -- .env)"` |
 
 ## Evidence Rules
 

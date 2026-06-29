@@ -12,11 +12,11 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(AppConstants.appTitle)),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(24.r),
+    return WrapperLayoutView(
+      args: WrapperLayoutArgs(
+        title: AppConstants.appTitle,
+        bodyPadding: EdgeInsets.all(24.r),
+        body: SafeArea(
           child: BlocBuilder<HomeCubit, HomeState>(
             builder: (context, state) {
               final textTheme = context.textTheme;

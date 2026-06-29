@@ -45,6 +45,14 @@ Must-follow rules:
 - Auth uses `AuthInterceptor` + `AuthTokenStore` (tokens in secure storage) with
   401 refresh-and-retry; products override `TokenRefresher`. Never read tokens
   or hard-code auth endpoints in Cubits/widgets.
+- Keep only truly app-wide Cubits in the bootstrapper; provide feature/screen
+  Cubits at route or page scope.
+- Unknown routes render a product-neutral not-found page; never silently fall
+  back to home.
+- Flutter client env is public config only. Track `.env.example`, ignore `.env`,
+  prefer `--dart-define`, and never put secrets in assets or client env files.
+- Network logging is debug-only and redacted; do not log headers, bodies, tokens,
+  passwords, secrets, or API keys in production.
 - Keep CI green (`.github/workflows/ci.yml`): format, analyze, test, and the
   `.sp` / direct-`textTheme` guards run on every PR.
 - In widgets use `final textTheme = context.textTheme`; do not repeat
@@ -53,6 +61,8 @@ Must-follow rules:
 - Before completion run `dart format lib test`, `flutter analyze`,
   `flutter test`, `! rg '\.sp\b' lib`, and
   `! rg 'Theme\.of\(context\)\.textTheme' lib`.
+- Before completion verify `.env` is not tracked with
+  `test -z "$(git ls-files -- .env)"`.
 
 <!-- HARNESS:BEGIN -->
 ## Harness

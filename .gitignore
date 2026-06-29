@@ -33,6 +33,11 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Local environment config.
+# Flutter client env values are public once shipped; never store secrets here.
+.env
+!.env.example
+
 # Symbolication related
 app.*.symbols
 

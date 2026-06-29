@@ -71,10 +71,6 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Environment config loaded by flutter_dotenv at startup.
-  assets:
-    - .env
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

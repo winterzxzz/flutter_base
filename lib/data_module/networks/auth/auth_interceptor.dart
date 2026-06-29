@@ -56,6 +56,15 @@ class AuthInterceptor extends QueuedInterceptorsWrapper {
       return;
     }
 
+    final latestAccessToken = await _tokenStore.readAccessToken();
+    final failedAuthorization = err.requestOptions.headers['Authorization'];
+    if (latestAccessToken != null &&
+        latestAccessToken.isNotEmpty &&
+        failedAuthorization != 'Bearer $latestAccessToken') {
+      await _retryWithAccessToken(err, handler, latestAccessToken);
+      return;
+    }
+
     final refreshToken = await _tokenStore.readRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
       await _expireSession();
@@ -71,10 +80,17 @@ class AuthInterceptor extends QueuedInterceptorsWrapper {
     }
 
     await _tokenStore.saveTokens(tokens);
+    await _retryWithAccessToken(err, handler, tokens.accessToken);
+  }
 
+  Future<void> _retryWithAccessToken(
+    DioException err,
+    ErrorInterceptorHandler handler,
+    String accessToken,
+  ) async {
     final options = err.requestOptions
       ..extra[_retriedKey] = true
-      ..headers['Authorization'] = 'Bearer ${tokens.accessToken}';
+      ..headers['Authorization'] = 'Bearer $accessToken';
 
     try {
       final response = await _retryClient.fetch<dynamic>(options);
